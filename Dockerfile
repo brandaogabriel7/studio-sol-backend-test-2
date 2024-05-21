@@ -8,12 +8,12 @@ WORKDIR $GOPATH/src/mypackage/myapp/cmd/server
 
 RUN go get -d -v
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /go/bin/studio-sol-back-end-test-2
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /go/bin/studio-sol-backend-test-2
 
 FROM scratch
 
-COPY --from=builder /go/bin/studio-sol-back-end-test-2 /go/bin/studio-sol-back-end-test-2
+COPY --from=builder /go/bin/studio-sol-backend-test-2 /go/bin/studio-sol-backend-test-2
 
-CMD ["/go/bin/studio-sol-back-end-test-2"]
+CMD ["/go/bin/studio-sol-backend-test-2"]
 
 EXPOSE 8080

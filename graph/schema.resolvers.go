@@ -11,14 +11,15 @@ import (
 	"github.com/brandaogabriel7/studio-sol-backend-test-2/graph/model"
 )
 
-// CreateTodo is the resolver for the createTodo field.
-func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
+// Verify is the resolver for the verify field.
+func (r *mutationResolver) Verify(ctx context.Context, score string) (*model.Verify, error) {
+	return &model.Verify{Combinations: 1}, nil
 }
 
-// Todos is the resolver for the todos field.
-func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todos - todos"))
+// Hello is the resolver for the hello field.
+// This query only exists to fix an issue in retrieving the schema from the GraphQL playground.
+func (r *queryResolver) Hello(ctx context.Context, name string) (string, error) {
+	return fmt.Sprintf("Hello, %s", name), nil
 }
 
 // Mutation returns MutationResolver implementation.

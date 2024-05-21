@@ -1,28 +1,13 @@
-# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
-
-type Todo {
-  id: ID!
-  text: String!
-  done: Boolean!
-  user: User!
-}
-
-type User {
-  id: ID!
-  name: String!
-}
-
-type Query {
-  todos: [Todo!]!
-}
-
-input NewTodo {
-  text: String!
-  userId: String!
+type Verify {
+  combinations: Int!
 }
 
 type Mutation {
-  createTodo(input: NewTodo!): Todo!
+  verify(score: String!): Verify!
+}
+
+# I added the hello query to fix an issue with the GraphQL playground. It couldn't fetch the
+# schemas if there wasn't a query definition.
+type Query {
+  hello(name: String!): String!
 }
