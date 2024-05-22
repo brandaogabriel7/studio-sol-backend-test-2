@@ -1,4 +1,4 @@
-package sum_test
+package integration_tests_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestSum(t *testing.T) {
+func TestIntegrationTests(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Sum Suite")
+	RunSpecs(t, "IntegrationTests Suite")
 }

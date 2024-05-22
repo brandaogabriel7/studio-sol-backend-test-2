@@ -2,13 +2,7 @@
 
 ## Tabela de conteúdos
 
-- [Introdução](#introdução)
-  - [Pontuações possíveis](#pontuações-possíveis)
-- [Stack](#stack)
-- [Como executar a aplicação](#como-executar-a-aplicação)
-  - [Localmente](#localmente)
-  - [Dockerfile](#dockerfile)
-- [Como executar os testes](#como-executar-os-testes)
+<!-- TODO: Criar tabela de conteúdos do README -->
 
 ## Introdução
 
@@ -84,3 +78,22 @@ docker run -d -e PORT=8000 -p 8080:8000 --name studio-sol-backend-test-2 studio-
 ## Como executar os testes
 
 Esse projeto usa o [ginkgo](https://github.com/onsi/ginkgo) como ferramenta de testes. Então, para executar os testes, você precisa da [Ginkgo CLI](https://onsi.github.io/ginkgo/#installing-ginkgo) instalada em sua máquina.
+
+## Processo de desenvolvimento
+
+Esta seção descreve as etapas que eu segui na construção do projeto.
+
+### Configurar projeto inicial
+
+1. Inicializar projeto com o [gqlgen](https://github.com/99designs/gqlgen)
+2. Criar Dockerfile do projeto (usar imagem scratch para gerar um container mais leve)
+3. Instalar bibliotecas de teste: ginkgo e gomega
+4. Criar pipeline de build do projeto usando Github Actions
+5. Criar schema GraphQL
+
+- Criar mutation `verify` e modelo de saída
+- Criar query `hello`. **Essa query foi necessária para o GraphQL playground conseguir recuperar o schema do app. Não funciona se não tiver no mínimo uma definição de query.**
+
+### Criar testes de integração
+
+Decidi criar testes de integração como base antes de começar o desenvolvimento. Quando esses testes passarem, quer dizer que tudo está funcionando (configuração da mutation e dos models GraphQL, algoritmo para cálculo das combinações). Inicialmente usei os dois casos de teste fornecidos no enunciado.
