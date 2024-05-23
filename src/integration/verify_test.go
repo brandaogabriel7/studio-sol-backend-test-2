@@ -42,6 +42,10 @@ var _ = Describe("Verify", func() {
 			},
 			Entry("Test case 1", "3x15", 4),
 			Entry("Test case 2", "8x5", 0),
+			Entry("Test case 3", "8x7", 1),
+			Entry("Test case 4", "15x21", 28),
+			Entry("Test case 5", "20x6", 10),
+			Entry("Test case 6", "32x2", 0),
 		)
 	})
 })
