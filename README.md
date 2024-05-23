@@ -2,9 +2,21 @@
 
 ## Tabela de conteúdos
 
-<!-- TODO: Criar tabela de conteúdos do README -->
-
+- [Introdução](#introdução)
+  - [Pontuações possíveis](#pontuações-possíveis)
+- [Stack](#stack)
+- [Como executar a aplicação](#como-executar-a-aplicação)
+  - [Localmente](#localmente)
+  - [Dockerfile](#dockerfile)
+- [Como executar os testes](#como-executar-os-testes)
+- [Processo de desenvolvimento](#processo-de-desenvolvimento)
+  - [Configurar projeto inicial](#configurar-projeto-inicial)
+  - [Criar testes de integração](#criar-testes-de-integração)
 - [Algoritmo para calcular as combinações](#algoritmo-para-calcular-as-combinações)
+  - [Separar a string do score](#separar-a-string-do-score)
+  - [Calcular as combinações para cada time](#calcular-as-combinações-para-cada-time)
+  - [Multiplicar as pontuações dos dois times](#multiplicar-as-pontuações-dos-dois-times)
+- [Otimizando o algoritmo](#otimizando-o-algoritmo)
 
 ## Introdução
 
