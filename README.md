@@ -160,8 +160,10 @@ Senão, o resultado da multiplicação é o total de possibilidades de jogadas q
 
 Da forma que o algoritmo foi implementado inicialmente, a complexidade de tempo é _O(n)_, sendo n o `score` fornecido.
 
-Embora as partidas de futebol americano não tenham placares altos o suficiente para prejudicar consideravelmente a performance do algoritmo, ele ainda poderia ser otimizado utilizando um cache para guardar os cálculos de combinações entre requisições.
+Embora as partidas de futebol americano não tenham placares altos o suficiente para prejudicar consideravelmente a performance do algoritmo, ele ainda poderia ser otimizado utilizando um cache para guardar os cálculos de combinações já feitas entre requisições.
 
-Eu implementei isso salvando as combinações já calculadas em um map. Sempre que a função para calcular as combinações de um time é chamada, esse cache é verificado antes da realização dos cálculos.
+Se por exemplo, uma requisição é para calcular o placar "30x6", o algoritmo calcula todas as combinações de pontuações até 30 pontos para o primeiro time. Dessa forma, na hora de checar as combinações do segundo time, a quantidade de combinações já está no cache, visto que 6 foi um dos valores intermediários para calcular as combinações de 30 pontos.
 
-Essa alteração é suficiente para que muitas requisições tenham **tempo constante** _(O(1))_, quando verificam combinações que já foram calculadas antes.
+Da mesma forma, se outra requisição é feita com o placar "21x12", as duas pontuações já estão no cache e podem ser recuperadas em tempo constante - _O(1)_. O pior caso do algoritmo continua sendo _O(n)_, mas a maioria das requisições pode reutilizar o cache de cálculos anteriores e retornar em **tempo constante**.
+
+Eu implementei esse cache salvando as combinações em um `map` singleton que é reutilizado entre as requisições.
