@@ -17,8 +17,8 @@ func (tps *TeamPointsService) GetTeamCombinationsCount(teamPoints int) int {
 		return 0
 	}
 
-	if combinations, cached := tps.cachedCombinations[teamPoints]; cached {
-		return combinations
+	if teamCombinations, cached := tps.cachedCombinations[teamPoints]; cached {
+		return teamCombinations
 	}
 
 	combinations := make([]int, teamPoints+1)
