@@ -155,3 +155,13 @@ Por fim, sabendo quantas combinações são possíveis para cada time, basta mul
 Se algum dos times tiver uma pontuação impossível (0 possibilidades), a multiplicação também vai resultar em 0, indicando que é um `score` impossível no futebol americano.
 
 Senão, o resultado da multiplicação é o total de possibilidades de jogadas que permite chegar no placar fornecido. Ou seja, cada combinação possível do time 1 combinada com cada combinação possível do time 2.
+
+## Otimizando o algoritmo
+
+Da forma que o algoritmo foi implementado inicialmente, a complexidade de tempo é _O(n)_, sendo n o `score` fornecido.
+
+Embora as partidas de futebol americano não tenham placares altos o suficiente para prejudicar consideravelmente a performance do algoritmo, ele ainda poderia ser otimizado utilizando um cache para guardar os cálculos de combinações entre requisições.
+
+Eu implementei isso salvando as combinações já calculadas em um map. Sempre que a função para calcular as combinações de um time é chamada, esse cache é verificado antes da realização dos cálculos.
+
+Essa alteração é suficiente para que muitas requisições tenham **tempo constante** _(O(1))_, quando verificam combinações que já foram calculadas antes.
