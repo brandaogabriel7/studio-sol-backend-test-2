@@ -13,7 +13,9 @@ import (
 
 // Verify is the resolver for the verify field.
 func (r *mutationResolver) Verify(ctx context.Context, score string) (*model.Verify, error) {
-	return &model.Verify{Combinations: 1}, nil
+	combinations := r.Resolver.GameScoreService.GetCombinationsCount(score)
+	
+	return &model.Verify{Combinations: combinations}, nil
 }
 
 // Hello is the resolver for the hello field.
