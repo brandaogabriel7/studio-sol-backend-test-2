@@ -19,6 +19,7 @@ var _ = Describe("TeamPointsService", func() {
 		},
 		Entry("Valid test case 1", 3, 1),
 		Entry("Valid test case 2", 0, 1),
+		Entry("Valid test case 3", 320, 6044),
 	)
 
 	DescribeTable("Return 0 for team points that are not possible to get in football",

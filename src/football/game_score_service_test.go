@@ -16,5 +16,6 @@ var _ = Describe("GameScoreService", func() {
 			Expect(combinations).To(Equal(expectedCombinations))
 		},
 		Entry("Valid case 1", "3x15", 4),
+		Entry("Invalid case 1", "21x2", 0),
 	)
 })
