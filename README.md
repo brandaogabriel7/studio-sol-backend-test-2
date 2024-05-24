@@ -135,7 +135,7 @@ Se, ao subtrair uma jogada de uma pontuação, eu encontrar uma árvore de possi
 
 > Na verdade, não é possível obter 5 pontos no futebol americano. O algoritmo teria certeza disso depois de repetir o mesmo processo para os outros 3 tipos de jogadas.
 
-Essa lógica pode ser seguida recursivamente até encontrar o total de combinações. Além disso, as quantidades de combinações possíveis podem ser armazenadas em um array após calculadas para serem reutilizadas para pontuações mais altas. O pseudo-código representa a implementação desse algoritmo:
+Essa lógica é repetida para todas as pontuações começando da mais baixa até chegar no valor que o time marcou. Dessa forma os valores intermediários podem ser reaproveitados para calcular as combinações para pontuações mais altas e não repetir os mesmos cálculos várias vezes. O pseudo-código representa a implementação desse algoritmo:
 
 ```
 funcao contar_combinacoes(total_pontos)
