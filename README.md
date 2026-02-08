@@ -1,181 +1,142 @@
-# Studio Sol - Prova prática Back-end (05-2024)
+# American Football Score Combinations — GraphQL API
 
-## Tabela de conteúdos
+A GraphQL API that calculates how many possible scoring combinations produce a given American football score. Built with Go, gqlgen, and a dynamic programming algorithm with cross-request caching.
 
-- [Introdução](#introdução)
-  - [Pontuações possíveis](#pontuações-possíveis)
-- [Stack](#stack)
-- [Como executar a aplicação](#como-executar-a-aplicação)
-  - [Localmente](#localmente)
-  - [Dockerfile](#dockerfile)
-- [Como executar os testes](#como-executar-os-testes)
-- [Processo de desenvolvimento](#processo-de-desenvolvimento)
-  - [Configurar projeto inicial](#configurar-projeto-inicial)
-  - [Criar testes de integração](#criar-testes-de-integração)
-- [Algoritmo para calcular as combinações](#algoritmo-para-calcular-as-combinações)
-  - [Separar a string do score](#separar-a-string-do-score)
-  - [Calcular as combinações para cada time](#calcular-as-combinações-para-cada-time)
-  - [Multiplicar as pontuações dos dois times](#multiplicar-as-pontuações-dos-dois-times)
-- [Otimizando o algoritmo](#otimizando-o-algoritmo)
+> Originally built as a backend technical assessment for Studio Sol (May 2024).
 
-## Introdução
+## Problem
 
-Esse projeto é a minha prova prática para o processo seletivo de Back-end da Studio Sol em maio de 2024.
+Given a score like `"3x15"`, determine how many unique combinations of plays (field goal, touchdown, touchdown+1, touchdown+2) can produce each team's score, then multiply the results.
 
-O problema consiste em avaliar quantas combinações de pontuações são possíveis para se obter um determinado placar em uma partida de futebol americano.
+**Possible plays:**
+- Touchdown: 6 points
+- Touchdown + extra point: 7 points
+- Touchdown + 2-point conversion: 8 points
+- Field goal: 3 points
 
-### Pontuações possíveis
+## Tech Stack
 
-- Touchdown (6 pontos)
-  - Extra touchdown (até 2 pontos obtidos **apenas** após marcar um touchdown)
-- Field goal (3 pontos)
+| Technology | Purpose |
+|------------|---------|
+| Go 1.20 | Language |
+| [gqlgen](https://github.com/99designs/gqlgen) | GraphQL code generation |
+| [Ginkgo](https://github.com/onsi/ginkgo) + [Gomega](https://github.com/onsi/gomega) | BDD testing framework |
+| Docker | Multi-stage build (scratch base) |
+| GitHub Actions | CI pipeline |
 
-## Stack
+## Architecture
 
-- Linguagem back-end: Golang
-- Biblioteca para criação de servidor GraphQL: [gqlgen](https://github.com/99designs/gqlgen)
-- Bibliotecas para testes: [ginkgo](https://github.com/onsi/ginkgo) e [gomega](https://github.com/onsi/gomega)
-  > Essas bibliotecas usam sintaxe inspirada em BDD, o que ajuda na clareza e organização dos testes.
-- Ferramenta para pipeline: Github Actions
-  > O projeto tem um [pipeline do Github Actions](.github/workflows/main.yml) que faz o build do projeto e executa os testes usando _ginkgo_.
-- Ferramenta de containerização: Docker
+```
+cmd/server/              → Entry point
+graph/                   → GraphQL schema, resolvers, models
+src/football/
+├── team_points_service  → Dynamic programming algorithm + cache
+└── game_score_service   → Score parsing + coordination
+```
 
-## Como executar a aplicação
+- **Service layer** separates business logic from GraphQL resolvers
+- **Dependency injection** — `GameScoreService` is injected into resolvers
+- **Singleton cache** — `map[int]int` persisted across requests for O(1) amortized lookups
 
-### Localmente
+## Algorithm
 
-Para executar localmente você precisa ter `go 1.20` instalado.
+I broke the solution into 3 steps:
+
+![solution steps](assets/img/image.png)
+
+### 1. Parse the score string
+
+Split on `'x'` and convert each side to `int`.
+
+![parse score](assets/img/image-1.png)
+
+### 2. Calculate combinations per team (Dynamic Programming)
+
+For each total score, compute how many unique play combinations produce it. The algorithm builds up from the smallest scores, reusing intermediate results:
+
+```
+function count_combinations(total_points)
+  if total_points < 0
+    return 0
+
+  combinations = array[total_points + 1]
+  combinations[0] = 1  // zero points = one way (no plays)
+
+  possible_plays = [3, 6, 7, 8]
+
+  for play in possible_plays
+    for i from play to length(combinations)
+      combinations[i] += combinations[i - play]
+
+  return combinations[total_points]
+```
+
+Impossible scores (like 2 or 4) naturally accumulate 0 combinations.
+
+### 3. Multiply both teams
+
+`total = combinations(team1) × combinations(team2)`
+
+If either team has an impossible score (0 combinations), the result is 0.
+
+### Optimization: Cross-Request Caching
+
+- **Worst case:** O(n) where n = score value
+- **Amortized:** O(1) for cached scores
+- A request for `"30x6"` computes all values up to 30 — subsequent requests for any score ≤ 30 return instantly from cache
+- Implemented as a singleton `map[int]int` shared across requests
+
+## Running
+
+### Locally
 
 ```bash
-# Navegue até pasta raiz do projeto
-cd <pasta-onde-está-o-projeto>/studio-sol-backend-test-2
-
-# Execute a aplicação
 go run cmd/server/server.go
+# GraphQL Playground: http://localhost:8080
+# GraphQL endpoint:   http://localhost:8080/graphql
 ```
 
-A aplicação decide a porta pela variável de ambiente `PORT`. Caso nenhuma seja fornecida, a porta padrão é a 8080. As rotas são as seguintes:
+Set `PORT` env var to change the default port.
 
-Endpoint graphql: http://localhost:8080/graphql
-
-Playground GraphQL: http://localhost:8080
-
-> Lembre-se de trocar a porta se tiver fornecido um valor para a variável de ambiente `PORT`.
-
-### Dockerfile
-
-Caso não tenha `go 1.20` instalado, pode ser mais simples utilizar um container para testar.
+### Docker
 
 ```bash
-# Navegue até pasta raiz do projeto
-cd <pasta-onde-está-o-projeto>/studio-sol-backend-test-2
-
-# Faça o build da imagem
-docker build -t studio-sol-backend-test-2 .
-
-# Rode o container
-docker run -d -p 8080:8080 --name studio-sol-backend-test-2 studio-sol-backend-test-2
+docker build -t football-scores .
+docker run -d -p 8080:8080 football-scores
 ```
 
-As rotas são as seguintes:
+### Example Query
 
-Endpoint graphql: http://localhost:8080/graphql
+```graphql
+mutation {
+  verify(score: "3x15") {
+    combinations
+  }
+}
+# → { "data": { "verify": { "combinations": 4 } } }
+```
 
-Playground GraphQL: http://localhost:8080
+## Tests
 
-Você também pode passar outra porta ser usada pela aplicação _dentro do container_:
+Three-layer BDD testing with Ginkgo/Gomega:
 
 ```bash
-docker run -d -e PORT=8000 -p 8080:8000 --name studio-sol-backend-test-2 studio-sol-backend-test-2
+# Install Ginkgo CLI
+go install github.com/onsi/ginkgo/v2/ginkgo@v2.6.1
+
+# Run all tests
+ginkgo ./...
 ```
 
-## Como executar os testes
+- **Unit tests** — `TeamPointsService`: valid scores (0→1, 3→1, 320→6044) and impossible scores (2, 4 → 0)
+- **Service tests** — `GameScoreService`: score parsing + combination multiplication
+- **Integration tests** — full GraphQL mutation pipeline via gqlgen test client
 
-Esse projeto usa o [ginkgo](https://github.com/onsi/ginkgo) como ferramenta de testes. Então, para executar os testes, você precisa da [Ginkgo CLI](https://onsi.github.io/ginkgo/#installing-ginkgo) instalada em sua máquina.
+## Development Process
 
-## Processo de desenvolvimento
-
-Esta seção descreve as etapas que eu segui na construção do projeto.
-
-### Configurar projeto inicial
-
-1. Inicializar projeto com o [gqlgen](https://github.com/99designs/gqlgen)
-2. Criar Dockerfile do projeto (usar imagem scratch para gerar um container mais leve)
-3. Instalar bibliotecas de teste: ginkgo e gomega
-4. Criar pipeline de build do projeto usando Github Actions
-5. Criar schema GraphQL
-
-- Criar mutation `verify` e modelo de saída
-- Criar query `hello`. **Essa query foi necessária para o GraphQL playground conseguir recuperar o schema do app. Não funciona se não tiver no mínimo uma definição de query.**
-
-### Criar testes de integração
-
-Decidi criar testes de integração como base antes de começar o desenvolvimento. Quando esses testes passarem, quer dizer que tudo está funcionando (configuração da mutation e dos models GraphQL, algoritmo para cálculo das combinações). Inicialmente usei os dois casos de teste fornecidos no enunciado.
-
-## Algoritmo para calcular as combinações
-
-Eu quebrei a solução do problema em 3 partes:
-![passo a passo solução do problema](assets/img/image.png)
-
-### Separar a string do score
-
-Para separar a string do score em uma pontuação para time, eu só precisava quebrar no _'x'_ e converter cada um dos lados para `int`.
-
-![quebrar score em pontuações individuais](assets/img/image-1.png)
-
-### Calcular as combinações para cada time
-
-Dada a pontuação total que o time fez na partida de futebol americano, precisamos calcular quantas são as combinações de jogadas possíveis que resultam na pontuação total.
-
-Para encontrar essas combinações, precisamos analisar as árvore a partir de cada tipo de jogada. Por exemplo, para uma pontuação total de 15 pontos, eu posso começar analisando as jogadas que envolvem um _field goal_.
-
-Ao subtrair os 3 pontos de um field goal da pontuação total, fica 12 pontos. Todas as combinações de jogadas que resultam em 12 pontos, fazem parte da árvore de combinações de 15 pontos.
-
-Se, ao subtrair uma jogada de uma pontuação, eu encontrar uma árvore de possibilidades com 0 combinações, quer dizer que essa pontuação não é possível no futebol americano. Por exemplo, ao subtrair um _field goal_ (3 pontos) de uma pontuação de 5, obtém-se 2 pontos. Que não é uma pontuação possível no futebol americano. Logo, não existe combinação com _field goal_ que chegue a 5 pontos.
-
-> Na verdade, não é possível obter 5 pontos no futebol americano. O algoritmo teria certeza disso depois de repetir o mesmo processo para os outros 3 tipos de jogadas.
-
-Essa lógica é repetida para todas as pontuações começando da mais baixa até chegar no valor que o time marcou. Dessa forma os valores intermediários podem ser reaproveitados para calcular as combinações para pontuações mais altas e não repetir os mesmos cálculos várias vezes. O pseudo-código representa a implementação desse algoritmo:
-
-```
-funcao contar_combinacoes(total_pontos)
-  se total_pontos < 0
-    retornar 0
-
-  // guarda todas as combinações possíveis de pontuação de 0 a total_pontos
-  combinacoes = array[total_pontos + 1]
-
-  // a única maneira de terminar com 0 pontos é não marcar nenhuma jogada
-  combinacoes[0] = 1
-
-  // pontos para cada jogada
-  jogadas_possiveis = [3, 6, 7, 8]
-
-  para jogada em jogadas_possiveis
-    para i de jogada ate tamanho(combinacoes)
-      // soma as combinacoes complementares a cada jogada possivel
-      // para pontuacoes impossiveis sempre vai somar 0
-      combinacoes[i] += combinacoes[i - jogada]
-
-  retornar combinacoes[total_pontos]
-```
-
-### Multiplicar as pontuações dos dois times
-
-Por fim, sabendo quantas combinações são possíveis para cada time, basta multiplicar essas quantidades para obter o total de possibilidades.
-
-Se algum dos times tiver uma pontuação impossível (0 possibilidades), a multiplicação também vai resultar em 0, indicando que é um `score` impossível no futebol americano.
-
-Senão, o resultado da multiplicação é o total de possibilidades de jogadas que permite chegar no placar fornecido. Ou seja, cada combinação possível do time 1 combinada com cada combinação possível do time 2.
-
-## Otimizando o algoritmo
-
-Da forma que o algoritmo foi implementado inicialmente, a complexidade de tempo é _O(n)_, sendo n o `score` fornecido.
-
-Embora as partidas de futebol americano não tenham placares altos o suficiente para prejudicar consideravelmente a performance do algoritmo, ele ainda poderia ser otimizado utilizando um cache para guardar os cálculos de combinações já feitas entre requisições.
-
-Se por exemplo, uma requisição é para calcular o placar "30x6", o algoritmo calcula todas as combinações de pontuações até 30 pontos para o primeiro time. Dessa forma, na hora de checar as combinações do segundo time, a quantidade de combinações já está no cache, visto que 6 foi um dos valores intermediários para calcular as combinações de 30 pontos.
-
-Da mesma forma, se outra requisição é feita com o placar "21x12", as duas pontuações já estão no cache e podem ser recuperadas em tempo constante - _O(1)_. O pior caso do algoritmo continua sendo _O(n)_, mas a maioria das requisições pode reutilizar o cache de cálculos anteriores e retornar em **tempo constante**.
-
-Eu implementei esse cache salvando as combinações em um `map` singleton que é reutilizado entre as requisições.
+1. Initialized project with gqlgen
+2. Created multi-stage Dockerfile (scratch base for minimal image)
+3. Set up Ginkgo/Gomega + GitHub Actions CI
+4. **Wrote integration tests first** (TDD) — when they pass, the full pipeline works
+5. Implemented the algorithm incrementally with unit tests
+6. Added cross-request caching as optimization
